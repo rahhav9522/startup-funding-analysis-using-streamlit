@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # ---------- PAGE CONFIGURATION ----------
 # Sets wide layout and page title
@@ -63,6 +64,103 @@ def load_overall_analysis():
     ax3.plot(temp_df['x_axis'], temp_df['amount'])
     plt.xticks(rotation=90)
     st.pyplot(fig3)
+
+
+        # =================================================================
+    # 1️⃣ SECTOR ANALYSIS (Top Sectors - Count + Sum)
+    # =================================================================
+    st.subheader("🏭 Sector Analysis")
+
+    colA, colB = st.columns(2)
+    with colA:
+        st.markdown("**Top Sectors by Count (Number of Fundings)**")
+        top_sector_count = df['vertical'].value_counts().head(10)
+        fig1, ax1 = plt.subplots()
+        ax1.pie(top_sector_count, labels=top_sector_count.index, autopct="%0.1f%%", startangle=90)
+        ax1.axis("equal")
+        st.pyplot(fig1)
+
+    with colB:
+        st.markdown("**Top Sectors by Total Funding (₹ Cr)**")
+        top_sector_sum = df.groupby('vertical')['amount'].sum().sort_values(ascending=False).head(10)
+        fig2, ax2 = plt.subplots()
+        ax2.pie(top_sector_sum, labels=top_sector_sum.index, autopct="%0.1f%%", startangle=90)
+        ax2.axis("equal")
+        st.pyplot(fig2)
+
+    # =================================================================
+    # 2️⃣ TYPE OF FUNDING (ROUND-WISE DISTRIBUTION)
+    # =================================================================
+    st.subheader("💰 Type of Funding (Round-wise Distribution)")
+    funding_rounds = df['round'].value_counts().head(10)
+    fig3, ax3 = plt.subplots()
+    sns.barplot(x=funding_rounds.values, y=funding_rounds.index, ax=ax3)
+    ax3.set_xlabel("Number of Fundings")
+    ax3.set_ylabel("Funding Type")
+    st.pyplot(fig3)
+
+    # =================================================================
+    # 3️⃣ CITY-WISE FUNDING DISTRIBUTION
+    # =================================================================
+    st.subheader("🏙️ City-wise Funding Distribution")
+    city_funding = df.groupby('city')['amount'].sum().sort_values(ascending=False).head(10)
+    fig4, ax4 = plt.subplots()
+    sns.barplot(x=city_funding.values, y=city_funding.index, ax=ax4)
+    ax4.set_xlabel("Total Funding (Cr)")
+    ax4.set_ylabel("City")
+    st.pyplot(fig4)
+
+    # =================================================================
+    # 4️⃣ TOP STARTUPS (YEAR-WISE + OVERALL)
+    # =================================================================
+    st.subheader("🚀 Top Startups (Overall and Year-wise)")
+
+    colC, colD = st.columns(2)
+    with colC:
+        st.markdown("**Top 10 Startups by Total Funding (Overall)**")
+        top_startups = df.groupby('startup')['amount'].sum().sort_values(ascending=False).head(10)
+        fig5, ax5 = plt.subplots()
+        sns.barplot(x=top_startups.values, y=top_startups.index, ax=ax5)
+        ax5.set_xlabel("Total Funding (Cr)")
+        ax5.set_ylabel("Startup")
+        st.pyplot(fig5)
+
+    with colD:
+        selected_year = st.selectbox("Select Year", sorted(df['year'].dropna().unique().tolist()), index=len(df['year'].dropna().unique()) - 1)
+        top_startups_year = df[df['year'] == selected_year].groupby('startup')['amount'].sum().sort_values(ascending=False).head(10)
+        fig6, ax6 = plt.subplots()
+        sns.barplot(x=top_startups_year.values, y=top_startups_year.index, ax=ax6)
+        ax6.set_xlabel("Total Funding (Cr)")
+        ax6.set_ylabel(f"Top Startups in {selected_year}")
+        st.pyplot(fig6)
+
+    # =================================================================
+    # 5️⃣ TOP INVESTORS (By Total Amount)
+    # =================================================================
+    st.subheader("👔 Top Investors by Total Investment Amount")
+    # Split investors by comma, expand and sum per investor
+    investor_df = df.dropna(subset=['investors']).copy()
+    investor_df['investors'] = investor_df['investors'].str.split(',')
+    investor_exploded = investor_df.explode('investors')
+    investor_exploded['investors'] = investor_exploded['investors'].str.strip()
+
+    top_investors = investor_exploded.groupby('investors')['amount'].sum().sort_values(ascending=False).head(10)
+    fig7, ax7 = plt.subplots()
+    sns.barplot(x=top_investors.values, y=top_investors.index, ax=ax7)
+    ax7.set_xlabel("Total Funding (Cr)")
+    ax7.set_ylabel("Investor")
+    st.pyplot(fig7)
+
+    # =================================================================
+    # 6️⃣ FUNDING HEATMAP (Year vs Month)
+    # =================================================================
+    st.subheader("🔥 Funding Heatmap (Year vs Month)")
+    heatmap_df = df.groupby(['year', 'month'])['amount'].sum().unstack().fillna(0)
+    fig8, ax8 = plt.subplots(figsize=(10, 4))
+    sns.heatmap(heatmap_df, cmap="YlGnBu", ax=ax8)
+    ax8.set_xlabel("Month")
+    ax8.set_ylabel("Year")
+    st.pyplot(fig8)
 
 
 # =====================================================================

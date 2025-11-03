@@ -18,6 +18,9 @@ df['month'] = df['date'].dt.month
 df['year'] = df['date'].dt.year
 
 
+
+
+
 # =====================================================================
 # ------------------------ OVERALL ANALYSIS ----------------------------
 # =====================================================================
@@ -121,6 +124,29 @@ def load_investor_details(investor):
     st.pyplot(fig4)
 
 
+      # --- SIMILAR INVESTORS SECTION ---
+    st.subheader("🤝 Similar Investors")
+
+    # Step 1: Get all sectors (verticals) where this investor has invested
+    sectors = df[df['investors'].str.contains(investor, na=False)]['vertical'].dropna().unique()
+
+    # Step 2: Find all investors who also invested in these sectors
+    similar_investors_df = df[df['vertical'].isin(sectors)]
+
+    # Step 3: Extract unique investors list (split by comma and flatten)
+    all_investors = similar_investors_df['investors'].dropna().str.split(',').sum()
+    all_investors = [i.strip() for i in all_investors if i.strip() != '' and i.strip().lower() != investor.lower()]
+
+    # Step 4: Remove duplicates and sort
+    similar_investors = sorted(set(all_investors))
+
+    # Step 5: Display results
+    if similar_investors:
+        st.write(", ".join(similar_investors[:15]))  # Show top 15 similar investors
+    else:
+        st.write("No similar investors found.")
+
+
 # =====================================================================
 # ------------------------ STARTUP DETAILS -----------------------------
 # =====================================================================
@@ -177,6 +203,7 @@ option = st.sidebar.selectbox('Select One', ['Overall Analysis', 'StartUp', 'Inv
 # --- Option 1: Overall ---
 if option == 'Overall Analysis':
     load_overall_analysis()
+    pass
 
 # --- Option 2: Startup Details ---
 elif option == 'StartUp':
@@ -184,6 +211,7 @@ elif option == 'StartUp':
     btn1 = st.sidebar.button('Find StartUp Details')
     if btn1:
         load_startup_details(selected_startup)
+        pass
 
 # --- Option 3: Investor Details ---
 else:
@@ -191,3 +219,4 @@ else:
     btn2 = st.sidebar.button('Find Investor Details')
     if btn2:
         load_investor_details(selected_investor)
+        pass

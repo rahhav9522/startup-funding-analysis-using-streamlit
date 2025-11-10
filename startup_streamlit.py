@@ -9,7 +9,7 @@ st.set_page_config(layout='wide', page_title='StartUp Analysis')
 
 # ---------- LOAD DATA ----------
 # Load dataset (update path if needed)
-df = pd.read_csv("F:\codes\dsmp\data_set\streamlit_startup_funding\\archive\startup_cleaned.csv")
+df = pd.read_csv("F:\codes\dsmp\streamlit\data_set\streamlit_startup_funding\\archive\startup_cleaned.csv")
 
 # Convert date column to datetime format
 df['date'] = pd.to_datetime(df['date'], errors='coerce')

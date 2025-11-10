@@ -7,14 +7,13 @@ import plotly.graph_objects as go
 st.set_page_config(layout='wide', page_title='StartUp Analysis')
 
 # ---------- LOAD DATA ----------
-<<<<<<< HEAD
+
 df = pd.read_csv("startup_cleaned.csv")
-=======
 # Load dataset (update path if needed)
 df = pd.read_csv("startup_cleaned.csv")
 
 # Convert date column to datetime format
->>>>>>> 3e608161dc949aaf9e7ec8cf20b563d82ac25843
+
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
 df['month'] = df['date'].dt.month
 df['year'] = df['date'].dt.year
@@ -255,7 +254,7 @@ else:
     btn2 = st.sidebar.button('Find Investor Details')
     if btn2:
         load_investor_details(selected_investor)
-<<<<<<< HEAD
-=======
+
+
         pass
->>>>>>> 3e608161dc949aaf9e7ec8cf20b563d82ac25843
+

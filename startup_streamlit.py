@@ -4,16 +4,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # ---------- PAGE CONFIGURATION ----------
-st.set_page_config(layout='wide', page_title='StartUp Analysis')
+st.set_page_config(layout='wide', page_title='StartUp Funding Analysis')
 
 # ---------- LOAD DATA ----------
-
 df = pd.read_csv("startup_cleaned.csv")
-# Load dataset (update path if needed)
-df = pd.read_csv("startup_cleaned.csv")
-
-# Convert date column to datetime format
-
 df['date'] = pd.to_datetime(df['date'], errors='coerce')
 df['month'] = df['date'].dt.month
 df['year'] = df['date'].dt.year
@@ -23,7 +17,7 @@ df['year'] = df['date'].dt.year
 # ------------------------ OVERALL ANALYSIS ----------------------------
 # =====================================================================
 def load_overall_analysis():
-    st.title('Overall Analysis')
+    st.title('📊 Overall Startup Funding Analysis')
 
     # --- Compute key statistics ---
     total = round(df['amount'].sum())
@@ -32,17 +26,13 @@ def load_overall_analysis():
     num_startups = df['startup'].nunique()
 
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric('Total', str(total) + ' Cr')
-    with col2:
-        st.metric('Max', str(max_funding) + ' Cr')
-    with col3:
-        st.metric('Avg', str(round(avg_funding)) + ' Cr')
-    with col4:
-        st.metric('Funded Startups', num_startups)
+    col1.metric('Total Funding', f"{total} Cr")
+    col2.metric('Max Funding', f"{max_funding} Cr")
+    col3.metric('Average Funding', f"{round(avg_funding)} Cr")
+    col4.metric('Funded Startups', num_startups)
 
-    # --- Month-on-Month graph ---
-    st.header('📈 Month-on-Month Graph')
+    # --- Month-on-Month Funding Graph ---
+    st.header('📈 Month-on-Month Funding Trend')
     selected_option = st.selectbox('Select Type', ['Total', 'Count'])
 
     if selected_option == 'Total':
@@ -51,10 +41,16 @@ def load_overall_analysis():
         temp_df = df.groupby(['year', 'month'])['amount'].count().reset_index()
 
     temp_df['x_axis'] = temp_df['month'].astype(str) + '-' + temp_df['year'].astype(str)
-    fig3 = px.line(temp_df, x='x_axis', y='amount', markers=True,
-                   title=f'Month-on-Month {selected_option} of Funding')
-    fig3.update_layout(xaxis_title="Month-Year", yaxis_title="Amount (Cr)", xaxis_tickangle=90)
-    st.plotly_chart(fig3, use_container_width=True)
+    fig = px.line(temp_df, x='x_axis', y='amount', markers=True,
+                  title=f'Month-on-Month {selected_option} of Funding')
+    fig.update_layout(
+        xaxis_title="Month-Year",
+        yaxis_title="Amount (Cr)",
+        xaxis_tickangle=60,
+        margin=dict(l=40, r=20, t=60, b=100),
+        xaxis=dict(automargin=True)
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
     # =================================================================
     # 1️⃣ SECTOR ANALYSIS
@@ -65,23 +61,28 @@ def load_overall_analysis():
     with colA:
         top_sector_count = df['vertical'].value_counts().head(10)
         fig1 = px.pie(values=top_sector_count.values, names=top_sector_count.index,
-                      title="Top Sectors by Count", hole=0.3)
+                      title="Top Sectors by Count", hole=0.35)
+        fig1.update_traces(textposition='outside', textinfo='percent+label', pull=[0.05]*len(top_sector_count))
+        fig1.update_layout(showlegend=False, margin=dict(l=20, r=20, t=50, b=20))
         st.plotly_chart(fig1, use_container_width=True)
 
     with colB:
         top_sector_sum = df.groupby('vertical')['amount'].sum().sort_values(ascending=False).head(10)
         fig2 = px.pie(values=top_sector_sum.values, names=top_sector_sum.index,
-                      title="Top Sectors by Total Funding", hole=0.3)
+                      title="Top Sectors by Total Funding", hole=0.35)
+        fig2.update_traces(textposition='outside', textinfo='percent+label', pull=[0.05]*len(top_sector_sum))
+        fig2.update_layout(showlegend=False, margin=dict(l=20, r=20, t=50, b=20))
         st.plotly_chart(fig2, use_container_width=True)
 
     # =================================================================
     # 2️⃣ TYPE OF FUNDING
     # =================================================================
-    st.subheader("💰 Type of Funding (Round-wise Distribution)")
+    st.subheader("💰 Funding Type Distribution")
     funding_rounds = df['round'].value_counts().head(10)
     fig3 = px.bar(x=funding_rounds.values, y=funding_rounds.index,
-                  orientation='h', title="Funding Type Distribution",
+                  orientation='h', title="Top Funding Rounds",
                   labels={'x': 'Number of Fundings', 'y': 'Funding Type'})
+    fig3.update_layout(margin=dict(l=50, r=30, t=60, b=50), xaxis=dict(automargin=True), yaxis=dict(automargin=True))
     st.plotly_chart(fig3, use_container_width=True)
 
     # =================================================================
@@ -90,8 +91,9 @@ def load_overall_analysis():
     st.subheader("🏙️ City-wise Funding Distribution")
     city_funding = df.groupby('city')['amount'].sum().sort_values(ascending=False).head(10)
     fig4 = px.bar(x=city_funding.values, y=city_funding.index,
-                  orientation='h', title="City-wise Funding (Top 10)",
+                  orientation='h', title="Top 10 Cities by Total Funding",
                   labels={'x': 'Total Funding (Cr)', 'y': 'City'})
+    fig4.update_layout(margin=dict(l=50, r=30, t=60, b=50))
     st.plotly_chart(fig4, use_container_width=True)
 
     # =================================================================
@@ -105,6 +107,7 @@ def load_overall_analysis():
         fig5 = px.bar(x=top_startups.values, y=top_startups.index,
                       orientation='h', title="Top 10 Startups (Overall)",
                       labels={'x': 'Total Funding (Cr)', 'y': 'Startup'})
+        fig5.update_layout(margin=dict(l=50, r=30, t=60, b=50))
         st.plotly_chart(fig5, use_container_width=True)
 
     with colD:
@@ -114,6 +117,7 @@ def load_overall_analysis():
         fig6 = px.bar(x=top_startups_year.values, y=top_startups_year.index,
                       orientation='h', title=f"Top Startups in {selected_year}",
                       labels={'x': 'Total Funding (Cr)', 'y': 'Startup'})
+        fig6.update_layout(margin=dict(l=50, r=30, t=60, b=50))
         st.plotly_chart(fig6, use_container_width=True)
 
     # =================================================================
@@ -127,8 +131,9 @@ def load_overall_analysis():
 
     top_investors = investor_exploded.groupby('investors')['amount'].sum().sort_values(ascending=False).head(10)
     fig7 = px.bar(x=top_investors.values, y=top_investors.index,
-                  orientation='h', title="Top Investors by Funding",
+                  orientation='h', title="Top Investors by Total Funding",
                   labels={'x': 'Total Funding (Cr)', 'y': 'Investor'})
+    fig7.update_layout(margin=dict(l=50, r=30, t=60, b=50))
     st.plotly_chart(fig7, use_container_width=True)
 
     # =================================================================
@@ -136,9 +141,11 @@ def load_overall_analysis():
     # =================================================================
     st.subheader("🔥 Funding Heatmap (Year vs Month)")
     heatmap_df = df.groupby(['year', 'month'])['amount'].sum().unstack().fillna(0)
-    fig8 = px.imshow(heatmap_df, labels=dict(x="Month", y="Year", color="Funding (Cr)"),
+    fig8 = px.imshow(heatmap_df,
+                     labels=dict(x="Month", y="Year", color="Funding (Cr)"),
                      title="Funding Heatmap (Year vs Month)",
                      aspect="auto", color_continuous_scale="YlGnBu")
+    fig8.update_layout(margin=dict(l=50, r=20, t=70, b=50))
     st.plotly_chart(fig8, use_container_width=True)
 
 
@@ -154,48 +161,34 @@ def load_investor_details(investor):
     st.dataframe(last5_df)
 
     col1, col2 = st.columns(2)
-
     with col1:
         big_series = df[df['investors'].str.contains(investor, na=False)].groupby('startup')['amount'].sum().sort_values(ascending=False).head()
-        fig = px.bar(x=big_series.values, y=big_series.index,
-                     orientation='h', title="Biggest Investments")
+        fig = px.bar(x=big_series.values, y=big_series.index, orientation='h', title="Biggest Investments")
+        fig.update_layout(margin=dict(l=50, r=30, t=60, b=50))
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         vertical_series = df[df['investors'].str.contains(investor, na=False)].groupby('vertical')['amount'].sum()
         fig1 = px.pie(values=vertical_series.values, names=vertical_series.index,
-                      title="Sectors Invested In", hole=0.3)
+                      title="Sectors Invested In", hole=0.35)
+        fig1.update_traces(textposition='outside', textinfo='percent+label', pull=[0.05]*len(vertical_series))
+        fig1.update_layout(showlegend=False, margin=dict(l=20, r=20, t=50, b=20))
         st.plotly_chart(fig1, use_container_width=True)
 
-    col3, col4 = st.columns(2)
-    with col3:
-        round_series = df[df['investors'].str.contains(investor, na=False)].groupby('round')['amount'].sum()
-        fig2 = px.pie(values=round_series.values, names=round_series.index,
-                      title="Stage Invested In", hole=0.3)
-        st.plotly_chart(fig2, use_container_width=True)
-
-    with col4:
-        city_series = df[df['investors'].str.contains(investor, na=False)].groupby('city')['amount'].sum()
-        fig3 = px.pie(values=city_series.values, names=city_series.index,
-                      title="City Invested In", hole=0.3)
-        st.plotly_chart(fig3, use_container_width=True)
-
+    # YoY Investment Trend
     year_series = df[df['investors'].str.contains(investor, na=False)].groupby('year')['amount'].sum()
     fig4 = px.line(x=year_series.index, y=year_series.values, markers=True,
                    title="YoY Investment Trend")
     st.plotly_chart(fig4, use_container_width=True)
 
-    # --- Similar Investors ---
+    # Similar Investors
     st.subheader("🤝 Similar Investors")
     sectors = df[df['investors'].str.contains(investor, na=False)]['vertical'].dropna().unique()
     similar_investors_df = df[df['vertical'].isin(sectors)]
     all_investors = similar_investors_df['investors'].dropna().str.split(',').sum()
-    all_investors = [i.strip() for i in all_investors if i.strip() != '' and i.strip().lower() != investor.lower()]
+    all_investors = [i.strip() for i in all_investors if i.strip() and i.strip().lower() != investor.lower()]
     similar_investors = sorted(set(all_investors))
-    if similar_investors:
-        st.write(", ".join(similar_investors[:15]))
-    else:
-        st.write("No similar investors found.")
+    st.write(", ".join(similar_investors[:15]) if similar_investors else "No similar investors found.")
 
 
 # =====================================================================
@@ -225,13 +218,14 @@ def load_startup_details(startup_name):
     funding_info = startup_df[['date', 'round', 'investors', 'amount']].sort_values(by='date', ascending=False)
     st.dataframe(funding_info)
 
+    # Funding timeline chart
+    fig = px.line(startup_df, x='date', y='amount', markers=True, title=f"{startup_name} - Funding Over Time")
+    st.plotly_chart(fig, use_container_width=True)
+
     st.subheader("🏢 Similar Companies")
     similar = df[df['vertical'] == industry]['startup'].unique().tolist()
     similar = [s for s in similar if s.lower() != startup_name.lower()]
-    if similar:
-        st.write(", ".join(similar[:10]))
-    else:
-        st.write("No similar companies found.")
+    st.write(", ".join(similar[:10]) if similar else "No similar companies found.")
 
 
 # =====================================================================
@@ -245,16 +239,10 @@ if option == 'Overall Analysis':
 
 elif option == 'StartUp':
     selected_startup = st.sidebar.selectbox('Select StartUp', sorted(df['startup'].dropna().unique().tolist()))
-    btn1 = st.sidebar.button('Find StartUp Details')
-    if btn1:
+    if st.sidebar.button('Find StartUp Details'):
         load_startup_details(selected_startup)
 
 else:
     selected_investor = st.sidebar.selectbox('Select Investor', sorted(set(df['investors'].dropna().str.split(',').sum())))
-    btn2 = st.sidebar.button('Find Investor Details')
-    if btn2:
+    if st.sidebar.button('Find Investor Details'):
         load_investor_details(selected_investor)
-
-
-        pass
-
